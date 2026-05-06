@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random 6 Số - Không Trùng Lặp</title>
+    <style>
+        :root {
+            --bg: #0f0f1a;
+            --card: #1a1a2e;
+            --primary: #e94560;
+            --secondary: #0f3460;
+            --accent: #16213e;
+            --text: #eee;
+            --text-secondary: #aaa;
+            --gold: #f0c040;
+            --border: #2a2a4a;
+            --success: #00c853;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(233, 68, 96, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(15, 52, 96, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 80%, rgba(240, 192, 64, 0.06) 0%, transparent 60%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Hạt ánh sáng nền */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background:
+                radial-gradient(2px 2px at 15% 25%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(2px 2px at 45% 65%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(2px 2px at 75% 15%, rgba(255, 255, 255, 0.25), transparent),
+                radial-gradient(2px 2px at 85% 75%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(1px 1px at 30% 45%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(1px 1px at 60% 35%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(1px 1px at 10% 80%, rgba(255, 255, 255, 0.25), transparent),
+                radial-gradient(1px 1px at 90% 55%, rgba(255, 255, 255, 0.2), transparent),
+                radial-gradient(1px 1px at 55% 10%, rgba(255, 255, 255, 0.3), transparent),
+                radial-gradient(1px 1px at 20% 90%, rgba(255, 255, 255, 0.2), transparent);
+            z-index: 0;
+        }
+
+        .container {
+            background: var(--card);
+            border-radius: 28px;
+            padding: 40px 35px 35px;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 1px var(--border),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Đường viền phát sáng */
+        .container::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 29px;
+            padding: 1px;
+            background: linear-gradient(135deg,
+                    rgba(233, 68, 96, 0.4),
+                    rgba(240, 192, 64, 0.3),
+                    rgba(15, 52, 96, 0.5),
+                    rgba(233, 68, 96, 0.4));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            font-size: 56px;
+            margin-bottom: 8px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 25px rgba(233, 68, 96, 0.4));
+        }
+
+        @keyframes float {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h2 {
+            color: var(--text);
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, #ccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            font-weight: 400;
+        }
+
+        /* Khu hiển thị chính */
+        .current-display {
+            background: var(--accent);
+            border: 2px solid var(--border);
+            border-radius: 22px;
+            padding: 28px 20px;
+            margin-bottom: 22px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .current-display::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg,
+                    transparent,
+                    rgba(233, 68, 96, 0.08),
+                    transparent,
+                    rgba(240, 192, 64, 0.08),
+                    transparent,
+                    rgba(233, 68, 96, 0.08));
+            animation: rotateGlow 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotateGlow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .current-display.copied-glow {
+            border-color: var(--success) !important;
+            box-shadow: 0 0 40px rgba(0, 200, 83, 0.3), 0 0 80px rgba(0, 200, 83, 0.1);
+        }
+
+        .label-current {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .number-big {
+            font-size: 72px;
+            font-weight: 800;
+            letter-spacing: 16px;
+            color: #fff;
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 60px rgba(233, 68, 96, 0.6), 0 0 120px rgba(233, 68, 96, 0.3);
+            transition: all 0.3s ease;
+            word-break: break-all;
+        }
+
+        .number-big.pop {
+            animation: popBoom 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popBoom {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+                filter: blur(10px);
+            }
+            60% {
+                transform: scale(1.08);
+                opacity: 1;
+                filter: blur(0);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+
+        /* Nút */
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-random {
+            background: linear-gradient(135deg, #e94560 0%, #c23152 100%);
+            color: white;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: 0 8px 30px rgba(233, 68, 96, 0.35);
+        }
+
+        .btn-random:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 45px rgba(233, 68, 96, 0.5);
+        }
+
+        .btn-random:active {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(233, 68, 96, 0.4);
+        }
+
+        .btn-random::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-random:hover::after {
+            opacity: 1;
+        }
+
+        .btn-copy {
+            background: transparent;
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            flex: 1;
+            min-width: 150px;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-copy:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            box-shadow: 0 8px 30px rgba(240, 192, 64, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .btn-copy:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-copy.copied-state {
+            border-color: var(--success) !important;
+            color: var(--success) !important;
+            background: rgba(0, 200, 83, 0.1) !important;
+            box-shadow: 0 8px 35px rgba(0, 200, 83, 0.25) !important;
+        }
+
+        .icon-svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Bảng tất cả số đã random */
+        .all-numbers-section {
+            background: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            max-height: 350px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .counter-badge {
+            background: var(--primary);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .counter-badge.warning {
+            background: #ff6d00;
+            animation: pulse-badge 1.5s ease-in-out infinite;
+        }
+
+        .counter-badge.full {
+            background: #d32f2f;
+            animation: pulse-badge 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .numbers-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            overflow-y: auto;
+            padding-right: 5px;
+            flex: 1;
+            align-content: flex-start;
+        }
+
+        .numbers-grid::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .numbers-grid::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+
+        .numbers-grid::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .number-tag {
+            background: var(--card);
+            color: #ccc;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .number-tag:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(233, 68, 96, 0.4);
+            z-index: 2;
+        }
+
+        .number-tag.copied-tag {
+            background: var(--success) !important;
+            border-color: var(--success) !important;
+            color: #fff !important;
+            box-shadow: 0 0 20px rgba(0, 200, 83, 0.5) !important;
+            animation: tagCopyPulse 0.5s ease;
+        }
+
+        @keyframes tagCopyPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.15);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .empty-state {
+            color: #555;
+            font-size: 14px;
+            text-align: center;
+            width: 100%;
+            padding: 30px 0;
+            letter-spacing: 0.5px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            background: #1a1a2e;
+            color: #fff;
+            padding: 14px 26px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            z-index: 1000;
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            box-shadow: 0 15px 40px rgba(0, 200, 83, 0.2);
+        }
+
+        .toast.warning {
+            border-color: #ff6d00;
+            box-shadow: 0 15px 40px rgba(255, 109, 0, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px 18px 22px;
+                border-radius: 22px;
+            }
+            .number-big {
+                font-size: 42px;
+                letter-spacing: 8px;
+            }
+            button {
+                padding: 13px 20px;
+                font-size: 14px;
+            }
+            .btn-group {
+                gap: 10px;
+            }
+            .number-tag {
+                font-size: 13px;
+                padding: 6px 10px;
+                letter-spacing: 1px;
+            }
+            .numbers-grid {
+                gap: 6px;
+            }
+            .all-numbers-section {
+                max-height: 250px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <span class="logo-icon">🎰</span>
+            <h2>Random 6 Số</h2>
+            <p class="subtitle">Mỗi số chỉ xuất hiện một lần duy nhất</p>
+        </div>
+
+        <!-- Số hiện tại -->
+        <div class="current-display" id="display">
+            <div class="label-current">✦ Số vừa tạo ✦</div>
+            <div class="number-big" id="numberText">000000</div>
+        </div>
+
+        <!-- Nút thao tác -->
+        <div class="btn-group">
+            <button class="btn-random" onclick="generateRandom()">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                Random
+            </button>
+            <button class="btn-copy" id="btnCopy" onclick="copyCurrentNumber()">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span id="copyText">Sao chép</span>
+            </button>
+            <button class="btn-copy" id="btnReset" onclick="resetAll()" style="min-width: auto; flex: 0.5;">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Reset
+            </button>
+        </div>
+
+        <!-- Tất cả số đã random -->
+        <div class="all-numbers-section">
+            <div class="section-header">
+                <span class="section-title">📋 Tất cả số đã tạo</span>
+                <span class="counter-badge" id="counterBadge">0 / 1.000.000</span>
+            </div>
+            <div class="numbers-grid" id="numbersGrid">
+                <div class="empty-state">Chưa có số nào được tạo. Nhấn <strong>Random</strong> để bắt đầu!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const numberText = document.getElementById('numberText');
+        const display = document.getElementById('display');
+        const btnCopy = document.getElementById('btnCopy');
+        const copyText = document.getElementById('copyText');
+        const numbersGrid = document.getElementById('numbersGrid');
+        const counterBadge = document.getElementById('counterBadge');
+        const toast = document.getElementById('toast');
+
+        // Set để lưu các số đã tạo (không trùng lặp)
+        const usedNumbers = new Set();
+        // Mảng để giữ thứ tự (mới nhất đầu)
+        let numbersOrder = [];
+        let currentNumber = '000000';
+        const TOTAL_POSSIBLE = 1000000; // 000000 -> 999999
+
+        // Khởi tạo
+        generateRandom();
+
+        function generateRandom() {
+            // Kiểm tra đã hết số chưa
+            if (usedNumbers.size >= TOTAL_POSSIBLE) {
+                showToast('⚠️ Đã tạo hết tất cả 1.000.000 số! Nhấn Reset để bắt đầu lại.', 'warning');
+                shakeElement(display);
+                return;
+            }
+
+            // Tạo số ngẫu nhiên chưa từng xuất hiện
+            let randomNum;
+            let attempts = 0;
+            const maxAttempts = 1000; // Tránh vòng lặp vô hạn khi gần hết số
+
+            do {
+                randomNum = Math.floor(Math.random() * TOTAL_POSSIBLE);
+                attempts++;
+                if (attempts > maxAttempts && usedNumbers.size < TOTAL_POSSIBLE) {
+                    // Tìm số chưa dùng bằng cách duyệt tuần tự từ một điểm ngẫu nhiên
+                    const start = Math.floor(Math.random() * TOTAL_POSSIBLE);
+                    for (let i = 0; i < TOTAL_POSSIBLE; i++) {
+                        const candidate = (start + i) % TOTAL_POSSIBLE;
+                        const candidateStr = String(candidate).padStart(6, '0');
+                        if (!usedNumbers.has(candidateStr)) {
+                            randomNum = candidate;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            } while (usedNumbers.has(String(randomNum).padStart(6, '0')));
+
+            currentNumber = String(randomNum).padStart(6, '0');
+            usedNumbers.add(currentNumber);
+            numbersOrder.unshift(currentNumber);
+
+            // Animation
+            numberText.classList.remove('pop');
+            void numberText.offsetWidth;
+            numberText.textContent = currentNumber;
+            numberText.classList.add('pop');
+
+            // Reset trạng thái sao chép
+            resetCopyButton();
+            display.classList.remove('copied-glow');
+
+            // Cập nhật giao diện
+            updateGrid();
+            updateCounter();
+        }
+
+        function updateGrid() {
+            if (numbersOrder.length === 0) {
+                numbersGrid.innerHTML = '<div class="empty-state">Chưa có số nào được tạo. Nhấn <strong>Random</strong> để bắt đầu!</div>';
+                return;
+            }
+
+            numbersGrid.innerHTML = numbersOrder.map(num => {
+                const isCurrent = num === currentNumber;
+                return `<span class="number-tag${isCurrent ? ' copied-tag' : ''}"
+                            onclick="copyFromGrid('${num}', this)"
+                            title="Bấm để sao chép: ${num}">
+                            ${num}
+                        </span>`;
+            }).join('');
+
+            // Cuộn xuống dưới cùng để thấy số mới nhất (nếu muốn thấy cũ nhất thì scrollTop = 0)
+            // Ở đây để grid hiển thị từ trên xuống, số mới nhất ở đầu
+            numbersGrid.scrollTop = 0;
+        }
+
+        function updateCounter() {
+            const count = usedNumbers.size;
+            counterBadge.textContent = `${count.toLocaleString('vi-VN')} / 1.000.000`;
+
+            // Đổi màu khi gần hết
+            counterBadge.classList.remove('warning', 'full');
+            if (count >= TOTAL_POSSIBLE) {
+                counterBadge.classList.add('full');
+            } else if (count >= TOTAL_POSSIBLE * 0.9) {
+                counterBadge.classList.add('warning');
+            }
+        }
+
+        function copyCurrentNumber() {
+            if (!currentNumber) return;
+
+            navigator.clipboard.writeText(currentNumber).then(() => {
+                btnCopy.classList.add('copied-state');
+                copyText.textContent = 'Đã sao chép!';
+                display.classList.add('copied-glow');
+
+                // Đánh dấu tag hiện tại
+                const tags = numbersGrid.querySelectorAll('.number-tag');
+                tags.forEach(tag => {
+                    if (tag.textContent.trim() === currentNumber) {
+                        tag.classList.add('copied-tag');
+                        setTimeout(() => tag.classList.remove('copied-tag'), 1500);
+                    }
+                });
+
+                showToast('✅ Đã sao chép: ' + currentNumber, 'success');
+
+                setTimeout(resetCopyButton, 2000);
+                setTimeout(() => display.classList.remove('copied-glow'), 2000);
+            }).catch(() => {
+                showToast('❌ Lỗi khi sao chép!', 'warning');
+            });
+        }
+
+        function copyFromGrid(num, element) {
+            currentNumber = num;
+            numberText.textContent = num;
+            numberText.classList.remove('pop');
+            void numberText.offsetWidth;
+            numberText.classList.add('pop');
+
+            // Highlight tag được bấm
+            element.classList.add('copied-tag');
+            setTimeout(() => element.classList.remove('copied-tag'), 1500);
+
+            // Sao chép
+            navigator.clipboard.writeText(num).then(() => {
+                display.classList.add('copied-glow');
+                setTimeout(() => display.classList.remove('copied-glow'), 2000);
+                showToast('✅ Đã sao chép: ' + num, 'success');
+            }).catch(() => {
+                showToast('❌ Lỗi khi sao chép!', 'warning');
+            });
+
+            resetCopyButton();
+            setTimeout(resetCopyButton, 2000);
+        }
+
+        function resetAll() {
+            if (usedNumbers.size === 0) {
+                showToast('Không có gì để reset!', 'warning');
+                return;
+            }
+
+            usedNumbers.clear();
+            numbersOrder = [];
+            currentNumber = '000000';
+            numberText.textContent = '000000';
+            numbersGrid.innerHTML = '<div class="empty-state">Chưa có số nào được tạo. Nhấn <strong>Random</strong> để bắt đầu!</div>';
+            updateCounter();
+            resetCopyButton();
+            display.classList.remove('copied-glow');
+            showToast('🔄 Đã reset! Tất cả số có thể được tạo lại.', 'success');
+        }
+
+        function resetCopyButton() {
+            btnCopy.classList.remove('copied-state');
+            copyText.textContent = 'Sao chép';
+        }
+
+        function showToast(message, type = '') {
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+        function shakeElement(el) {
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = 'shake 0.6s ease';
+            setTimeout(() => {
+                el.style.animation = '';
+            }, 600);
+        }
+
+        // Thêm keyframe shake
+        const shakeStyle = document.createElement('style');
+        shakeStyle.textContent = `
+                    @keyframes shake {
+                        0%,100% { transform: translateX(0); }
+                        10%,50%,90% { transform: translateX(-6px); }
+                        30%,70% { transform: translateX(6px); }
+                    }
+                `;
+        document.head.appendChild(shakeStyle);
+
+        // Phím tắt
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                generateRandom();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                // Nếu đang focus ngoài vùng nhập thì copy số
+                if (document.activeElement === document.body ||
+                    document.activeElement === document.documentElement) {
+                    e.preventDefault();
+                    copyCurrentNumber();
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
